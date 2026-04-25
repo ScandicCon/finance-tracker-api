@@ -6,12 +6,12 @@ from app.schemas.auth import TokenResponse, RegisterRequest
 from app.schemas.users import UserResponse
 from app.db.session import get_db
 from app.models.users import User
-from app.core.secutity import verify_password, create_token, hash_password
+from app.core.secutity import verify_password, create_token, hash_password, get_current_user
 
-router = APIRouter(prefix="auth", tags=["AUTH"])
+router = APIRouter(prefix="/auth", tags=["AUTH"])
 
 
-@router.post("login")
+@router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_db)):
     stmt = select(User).where(User.email == form_data.username)
     user = session.execute(stmt).scalar_one_or_none()
@@ -26,7 +26,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = D
         token_type="bearer"
     )
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register", response_model=UserResponse, status_code=201)
 def register(data_user: RegisterRequest, session: Session = Depends(get_db) ):
     stmt = select(User).where(User.email == data_user.email)
     user = session.execute(stmt).scalar_one_or_none()
@@ -42,3 +42,7 @@ def register(data_user: RegisterRequest, session: Session = Depends(get_db) ):
     session.commit()
     session.refresh(users)
     return users
+
+@router.get("/me", response_model=UserResponse)
+def get_me(current_user: User = Depends(get_current_user)):
+    return current_user

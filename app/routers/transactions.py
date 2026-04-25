@@ -11,9 +11,9 @@ from app.schemas.transactions import TransactionCreate,TransactionResponse, Tran
 from datetime import date
 from app.utils.enums import TransactionType
 
-router = APIRouter(prefix="transactions", tags=["Transactions"])
+router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
-@router.post("/", response_model=TransactionResponse)
+@router.post("/", response_model=TransactionResponse, status_code=201)
 def create_transactions(transaction:TransactionCreate, session: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     stmt = select(Category).where(Category.id == transaction.category_id,
                                       Category.user_id == current_user.id)

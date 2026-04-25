@@ -11,7 +11,7 @@ from app.db.session import get_db
 # важно: импортируем все модели
 from app.models.users import User
 from app.models.categories import Category
-from app.models.transaction import Transaction  # поправь имя файла, если у тебя другое
+from app.models.transaction import Transaction  
 
 
 SQLALCHEMY_DATABASE_URL = "sqlite://"

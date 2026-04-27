@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finance Tracker</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f4f6f8;
+      color: #222;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 30px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+
+    button {
+      border: none;
+      background: #2563eb;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    .danger {
+      background: #dc2626;
+    }
+
+    .success {
+      color: #16a34a;
+      font-weight: bold;
+    }
+
+    .error {
+      color: #dc2626;
+      font-weight: bold;
+    }
+
+    .list {
+      margin-top: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .item {
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .row > * {
+      flex: 1;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Finance Tracker</h1>
+    <p class="subtitle">Личный учёт доходов и расходов</p>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Регистрация</h2>
+        <input id="regEmail" placeholder="Email" />
+        <input id="regUsername" placeholder="Username" />
+        <input id="regPassword" type="password" placeholder="Password" />
+        <button onclick="register()">Создать аккаунт</button>
+        <div id="registerStatus" class="status"></div>
+      </div>
+
+      <div class="card">
+        <h2>Вход</h2>
+        <input id="loginEmail" placeholder="Email" />
+        <input id="loginPassword" type="password" placeholder="Password" />
+        <button onclick="login()">Войти</button>
+        <div id="loginStatus" class="status"></div>
+      </div>
+
+      <div class="card">
+        <h2>Создать категорию</h2>
+        <input id="categoryName" placeholder="Название категории" />
+        <select id="categoryType">
+          <option value="expense">Расход</option>
+          <option value="income">Доход</option>
+        </select>
+        <button onclick="createCategory()">Создать категорию</button>
+        <div id="categoryStatus" class="status"></div>
+      </div>
+
+      <div class="card">
+        <h2>Создать транзакцию</h2>
+        <input id="amount" placeholder="Сумма" />
+        <select id="transactionType">
+          <option value="expense">Расход</option>
+          <option value="income">Доход</option>
+        </select>
+        <select id="transactionCategory"></select>
+        <input id="description" placeholder="Описание" />
+        <input id="date" type="date" />
+        <button onclick="createTransaction()">Создать транзакцию</button>
+        <div id="transactionStatus" class="status"></div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top: 20px;">
+      <div class="card">
+        <h2>Категории</h2>
+        <button onclick="loadCategories()">Обновить категории</button>
+        <div id="categoriesList" class="list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Транзакции</h2>
+        <button onclick="loadTransactions()">Обновить транзакции</button>
+        <div id="transactionsList" class="list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "http://localhost:8000";
+    let token = localStorage.getItem("token") || "";
+
+    function setStatus(id, message, success = true) {
+      const el = document.getElementById(id);
+      el.textContent = message;
+      el.className = success ? "status success" : "status error";
+    }
+
+    async function register() {
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          email: regEmail.value,
+          username: regUsername.value,
+          password: regPassword.value
+        })
+      });
+
+      if (response.ok) {
+        setStatus("registerStatus", "Пользователь создан");
+      } else {
+        const data = await response.json();
+        setStatus("registerStatus", data.detail || "Ошибка регистрации", false);
+      }
+    }
+
+    async function login() {
+      const formData = new URLSearchParams();
+      formData.append("username", loginEmail.value);
+      formData.append("password", loginPassword.value);
+
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        token = data.access_token;
+        localStorage.setItem("token", token);
+        setStatus("loginStatus", "Вы вошли");
+        await loadCategories();
+        await loadTransactions();
+      } else {
+        setStatus("loginStatus", data.detail || "Ошибка входа", false);
+      }
+    }
+
+    async function createCategory() {
+      const response = await fetch(`${API_URL}/categories/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: categoryName.value,
+          type: categoryType.value
+        })
+      });
+
+      if (response.ok) {
+        setStatus("categoryStatus", "Категория создана");
+        categoryName.value = "";
+        await loadCategories();
+      } else {
+        const data = await response.json();
+        setStatus("categoryStatus", data.detail || "Ошибка категории", false);
+      }
+    }
+
+    async function loadCategories() {
+      const response = await fetch(`${API_URL}/categories/`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) return;
+
+      const categories = await response.json();
+
+      categoriesList.innerHTML = "";
+      transactionCategory.innerHTML = "";
+
+      categories.forEach(category => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <strong>${category.name}</strong>
+          <span class="badge">${category.type}</span>
+        `;
+        categoriesList.appendChild(div);
+
+        const option = document.createElement("option");
+        option.value = category.id;
+        option.textContent = `${category.name} (${category.type})`;
+        transactionCategory.appendChild(option);
+      });
+    }
+
+    async function createTransaction() {
+      const response = await fetch(`${API_URL}/transactions/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          amount: amount.value,
+          type: transactionType.value,
+          category_id: Number(transactionCategory.value),
+          description: description.value,
+          date: date.value
+        })
+      });
+
+      if (response.ok) {
+        setStatus("transactionStatus", "Транзакция создана");
+        amount.value = "";
+        description.value = "";
+        date.value = "";
+        await loadTransactions();
+      } else {
+        const data = await response.json();
+        setStatus("transactionStatus", data.detail || "Ошибка транзакции", false);
+      }
+    }
+
+    async function loadTransactions() {
+      const response = await fetch(`${API_URL}/transactions/`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) return;
+
+      const transactions = await response.json();
+
+      transactionsList.innerHTML = "";
+
+      transactions.forEach(transaction => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <strong>${transaction.amount} — ${transaction.type}</strong>
+          <div>${transaction.description || "Без описания"}</div>
+          <div>${transaction.date}</div>
+          <span class="badge">category_id: ${transaction.category_id}</span>
+        `;
+        transactionsList.appendChild(div);
+      });
+    }
+
+    if (token) {
+      loadCategories();
+      loadTransactions();
+    }
+  </script>
+</body>
+</html>

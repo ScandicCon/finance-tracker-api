@@ -9,13 +9,26 @@ REST API для учета личных финансов: доходы, расх
 * Python 3.13
 * FastAPI
 * SQLAlchemy
-* SQLite
+* PostgreSQL
 * JWT (аутентификация)
 * Pytest (тесты)
+* Redis (кэширование)
 
 ---
 
 ## 📦 Функциональность
+
+### ⚡ Кэширование (Redis)
+Для ускорения получения категорий используется Redis.
+
+- ключ: categories:user:{user_id}
+- TTL: 60 секунд
+- данные хранятся в JSON
+
+Кэш инвалидируется при:
+- создании категории
+- обновлении категории
+- удалении категории
 
 ### 🔐 Аутентификация
 
@@ -74,6 +87,20 @@ uvicorn app.main:app --reload
 ```
 
 ---
+## 🐳 Docker
+Проект можно запустить одной командой:
+
+```bash
+docker compose up --build
+
+Сервисы:
+
+app (FastAPI)
+db (PostgreSQL)
+redis (кэш)
+frontend (nginx)
+
+
 
 ## 🧪 Запуск тестов
 
@@ -139,6 +166,7 @@ app/
 ├── schemas/
 ├── routers/
 ├── db/
+├── frontend/
 ├── core/
 └── main.py
 
@@ -157,6 +185,11 @@ tests/
 
 ---
 
+## 💡 О проекте
+
+API позволяет пользователям отслеживать доходы и расходы,
+структурировать их по категориям и анализировать финансовую активность.
+
 ## 🎯 Цель проекта
 
 Пет-проект для демонстрации навыков backend-разработки:
@@ -169,5 +202,21 @@ tests/
 ---
 
 ## 👨‍💻 Автор
+
+🌐 Доступ
+-- Frontend: http://localhost:3000
+![Frontend](images/frontend.png)
+-- Backend: http://localhost:8000
+-- Swagger UI: http://localhost:8000/docs
+![Swagger](images/swagger.png)
+
+## 📌 Планы по улучшению
+
+- [ ] Alembic миграции  
+- [ ] Улучшить frontend (React/Vue)  
+- [ ] Добавить pagination  
+- [ ] Логирование  
+- [ ] CI/CD  
+
 
 Даниил

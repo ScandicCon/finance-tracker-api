@@ -31,6 +31,15 @@
       color: #666;
       margin-bottom: 30px;
     }
+    textarea {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+      resize: vertical;
+    }
 
     .grid {
       display: grid;
@@ -144,6 +153,21 @@
         <button onclick="register()">Создать аккаунт</button>
         <div id="registerStatus" class="status"></div>
       </div>
+      <div class="card">
+    <h2>AI Финансовый помощник</h2>
+
+    <textarea
+      id="aiQuestion"
+      placeholder="Например: На что я больше всего трачу?"
+      rows="5"
+    ></textarea>
+
+    <button onclick="askAI()">Спросить AI</button>
+
+    <div id="aiStatus" class="status"></div>
+
+    <div id="aiAnswer" class="item" style="margin-top: 15px; display: none;"></div>
+  </div>
 
       <div class="card">
         <h2>Вход</h2>
@@ -327,6 +351,37 @@
         setStatus("transactionStatus", data.detail || "Ошибка транзакции", false);
       }
     }
+  async function askAI() {
+  const question = aiQuestion.value.trim();
+
+  if (!question) {
+    setStatus("aiStatus", "Введите вопрос", false);
+    return;
+  }
+
+  setStatus("aiStatus", "AI думает...");
+
+  const response = await fetch(`${API_URL}/ai/ask`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      question: question
+    })
+  });
+
+  const data = await response.json();
+
+    if (response.ok) {
+      setStatus("aiStatus", "Ответ получен");
+      aiAnswer.style.display = "block";
+      aiAnswer.textContent = data.answer;
+    } else {
+      setStatus("aiStatus", data.detail || "Ошибка AI", false);
+    }
+  }
 
     async function loadTransactions() {
       const response = await fetch(`${API_URL}/transactions/`, {

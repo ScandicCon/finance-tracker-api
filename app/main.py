@@ -25,6 +25,6 @@ app.include_router(transactions.router)
 app.include_router(ai.router)
 
 
-@app.on_event("startup")
-def on_startup():
-    init_db()
+# @app.on_event("startup")
+# def on_startup():
+#     init_db()

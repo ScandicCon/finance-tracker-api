@@ -137,6 +137,12 @@ pytest
 ### AI
 * `POST /ai/ask`
 
+### Pagination
+
+`GET /transactions/` поддерживает пагинацию:
+
+```http
+GET /transactions/?limit=10&offset=0
 ---
 
 ## 🔐 Авторизация
@@ -150,6 +156,8 @@ Authorization: Bearer <token>
 ```
 
 ---
+
+
 
 ## 📊 Пример запроса
 
